@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import torch
 
 # Base Paths
 BASE_DIR = Path(__file__).resolve().parent
@@ -8,8 +9,7 @@ MODEL_PATH = ARTIFACTS_DIR / "calibrated_router.joblib"
 SCALER_PATH = ARTIFACTS_DIR / "struct_scaler.joblib"
 
 # Hardware Device (Apple Silicon mps or cpu)
-DEVICE = os.getenv("DEVICE", "mps" if os.uname().sysname == "Random" else "cpu")
-
+DEVICE = os.getenv("DEVICE", "mps" if torch.backends.mps.is_available() else "cpu")
 # Model Names
 SMALL_MODEL = os.getenv("SMALL_MODEL", "meta-llama/Llama-3.1-8B-Instruct")
 FRONTIER_MODEL = os.getenv("FRONTIER_MODEL", "gpt-4o")
