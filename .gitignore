@@ -1,5 +1,7 @@
-PROMPT.md
-MASTER.md
+*PROMPT_PRODUCTION*.md
+*MASTER_PRODUCTION*.md
+*PROMPT_PRACTICE*.md
+*MASTER_PRACTICE*.md
 .venv/
 __pycache__/
 *.py[cod]
