@@ -1,0 +1,4 @@
+# Phase 2 (production) dependencies. Phase 1 lives in practice/backend/requirements.txt.
+pandas
+huggingface_hub
+pytest
