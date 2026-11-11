@@ -18,17 +18,19 @@ model-router/
 │   ├── data/                          # Prototype benchmark datasets
 │   └── README.md                      # Detailed walkthrough of prototype findings
 │
-├── core/                              # Phase 2: Production Multi-Tier Gateway (In Development)
-│   ├── router/                        # Hybrid features, LightGBM / DeBERTa routers, conformal.py, cascade.py
-│   ├── cache/                         # Bi-encoder filter + DeBERTa-v3 NLI cross-encoder verifier (MNLI/PAWS/QQP)
-│   └── gateway/                       # FastAPI proxy with SSE streaming, OpenRouter client, Prometheus telemetry
-│
-├── benchmarks/                        # Real-World Evaluation Suite
-│   ├── data_loaders/                  # RouterBench (Martian) + OpenRouter eval + PAWS/MNLI loaders
-│   ├── baselines/                     # Random, length heuristic, kNN, Matrix Factorization (RouteLLM paper)
-│   └── evaluate_production.py         # Bootstrapped Pareto curves & ECE reliability plots
-│
-└── tests/                             # Pytest suite
+├── production/                        # Phase 2: everything real-world (self-contained; run from here)
+│   ├── core/                              # Phase 2: Production Multi-Tier Gateway (In Development)
+│   │   ├── router/                        # Hybrid features, LightGBM / DeBERTa routers, conformal.py, cascade.py
+│   │   ├── cache/                         # Bi-encoder filter + DeBERTa-v3 NLI cross-encoder verifier (MNLI/PAWS/QQP)
+│   │   └── gateway/                       # FastAPI proxy with SSE streaming, OpenRouter client, Prometheus telemetry
+│   │
+│   ├── benchmarks/                        # Real-World Evaluation Suite
+│   │   ├── data_loaders/                  # RouterBench (Martian) + OpenRouter eval + PAWS/MNLI loaders
+│   │   ├── baselines/                     # Random, length heuristic, kNN, Matrix Factorization (RouteLLM paper)
+│   │   └── evaluate_production.py         # Bootstrapped Pareto curves & ECE reliability plots
+│   │
+│   ├── tests/                             # Pytest suite
+│   └── requirements.txt                   # Phase 2 dependencies (run everything from inside production/)
 ```
 
 ---
