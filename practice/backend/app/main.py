@@ -77,7 +77,7 @@ def health_check():
     """Health check and gateway status."""
     return {
         "status": "healthy",
-        "service": "RouteLLM-Gateway",
+        "service": "Model-Router",
         "device": DEVICE,
         "small_model": SMALL_MODEL,
         "frontier_model": FRONTIER_MODEL

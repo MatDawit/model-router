@@ -24,7 +24,7 @@ When designing a cost-aware LLM router and gateway, there were four core enginee
 
 ```mermaid
 flowchart TD
-    Client["Multi-Agent Workflow / OpenAI Client"] --> GW["RouteLLM Gateway (/v1/chat/completions)"]
+    Client["Multi-Agent Workflow / OpenAI Client"] --> GW["Model-Router Gateway (/v1/chat/completions)"]
     
     subgraph S1["Subsystem 1: Verified Two-Stage Semantic Cache"]
         GW --> CacheCheck{"Stage 1: Cosine Sim >= 0.88?"}
@@ -72,7 +72,7 @@ flowchart TD
 
 ## 4. The Prototype Pareto Frontier
 
-Sweeping the routing threshold $\tau$ on our prototype benchmark produced this efficiency curve:
+Sweeping the routing threshold $\tau$ on our **synthetic** prototype benchmark (deterministic failure rules, so 100% accuracy here reflects the rules being learnable, not real-world performance) produced this efficiency curve:
 
 | Threshold ($\tau$) | Route to Small (%) | Route to Frontier (%) | System Accuracy (%) | Retained Accuracy (%) | Total Cost ($) | Cost Savings (%) |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -135,4 +135,4 @@ curl -s http://localhost:8000/metrics | python3 -m json.tool
 ---
 
 > **Looking for the Production System?**  
-> See the root directory for the full-scale system evaluated on **RouterBench**, **OpenRouter live models**, and **DeBERTa NLI cross-encoders**.
+> See the root [`README.md`](../README.md) for the Phase 2 system, being built on **RouterBench**, **OpenRouter live models**, and **DeBERTa NLI cross-encoders**.
