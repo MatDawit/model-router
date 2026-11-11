@@ -1,7 +1,7 @@
-# RouteLLM-Gateway
+# Model-Router
 > **Cost-Aware Semantic Router & Speculative Agent Gateway for Multi-Agent Workflows**
 
-RouteLLM-Gateway is an OpenAI-compatible routing and caching proxy (`/v1/chat/completions`) designed to sit between multi-agent systems and underlying LLMs. It dynamically routes requests across model capability tiers (e.g., Llama-3.1-8B, 70B, and Frontier models like GPT-4o / Claude 3.5 Sonnet) using calibrated machine learning, a verified two-stage semantic cache, and speculative cascading.
+Model-Router is an OpenAI-compatible routing and caching proxy (`/v1/chat/completions`) designed to sit between multi-agent systems and underlying LLMs. It dynamically routes requests across model capability tiers (e.g., Small 8B, Mid 70B, and Frontier models like Claude 3.5 Sonnet / GPT-4o) using calibrated machine learning, a verified two-stage semantic cache, and speculative cascading.
 
 ---
 
@@ -10,7 +10,7 @@ RouteLLM-Gateway is an OpenAI-compatible routing and caching proxy (`/v1/chat/co
 This repository is organized into distinct phases demonstrating the full ML systems engineering lifecycle:
 
 ```text
-routellm-gateway/
+model-router/
 ├── practice/                          # Phase 1: Educational Prototype & Foundational Labs
 │   ├── notebooks/                     # Labs 1-3: Cache poisoning, oracle data, L2 calibration
 │   ├── backend/                       # Prototype FastAPI gateway (/v1/chat/completions)

@@ -19,7 +19,7 @@ from app.telemetry.metrics import telemetry
 
 # 1. Initialize FastAPI Application
 app = FastAPI(
-    title="RouteLLM-Gateway",
+    title="Model-Router",
     description="Cost-Aware Semantic Router & Speculative Agent Gateway",
     version="1.0.0"
 )
@@ -64,7 +64,7 @@ class ChatMessage(BaseModel):
     content: str
 
 class ChatCompletionRequest(BaseModel):
-    model: Optional[str] = "routellm-gateway"
+    model: Optional[str] = "model-router"
     messages: List[ChatMessage]
     temperature: Optional[float] = 0.7
     max_tokens: Optional[int] = 500

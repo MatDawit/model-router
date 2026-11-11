@@ -1,7 +1,7 @@
-# RouteLLM-Gateway: Practice Prototype & Proof of Concept (Phase 1)
+# Model-Router: Practice Prototype & Proof of Concept (Phase 1)
 
 > **Context for Readers & Reviewers:**  
-> This directory contains the **initial educational prototype and proof-of-concept** for RouteLLM-Gateway. Before building the production-grade multi-tier gateway on real model outputs, we created this prototype to hands-on validate core ML and systems engineering hypotheses in a controlled, local environment.
+> This directory contains the **initial educational prototype and proof-of-concept** for Model-Router. Before building the production-grade multi-tier gateway on real model outputs, we created this prototype to hands-on validate core ML and systems engineering hypotheses in a controlled, local environment.
 
 ---
 
