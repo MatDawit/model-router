@@ -9,6 +9,7 @@ import argparse
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 
+from benchmarks.baselines.diagnostic import benchmark_rate_probs
 from benchmarks.baselines.simple import BaseRateBaseline, LengthBaseline
 from benchmarks.data_loaders.routerbench import load_routerbench, make_labels
 from benchmarks.data_loaders.splits import add_split_column
@@ -37,6 +38,8 @@ def main():
         for name, model in (("base_rate", BaseRateBaseline()), ("length", LengthBaseline())):
             model.fit(train_texts, train[target].values)
             rows.append(_row(name, target, cal[target].values, model.predict_proba(cal_texts)))
+        # Cheating diagnostic (reads the benchmark name): how much signal is just "task type"?
+        rows.append(_row("benchmark_id*", target, cal[target].values, benchmark_rate_probs(train, cal, target)))
 
     if args.embed:
         from core.router.features.dense import embed, load_encoder
