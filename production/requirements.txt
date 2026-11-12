@@ -3,3 +3,5 @@ pandas
 huggingface_hub
 pytest
 scikit-learn
+numpy
+sentence-transformers
