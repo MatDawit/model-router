@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from benchmarks.pareto import best_under_budget, evaluate_routing, route, sweep
+from benchmarks.pareto import best_under_budget, evaluate_routing, route, sweep, sweep_grid
 
 MODELS = dict(small="S", mid="M", frontier="F")
 
@@ -49,6 +49,14 @@ def test_sending_a_failing_prompt_to_small_costs_quality():
 def test_sweep_returns_one_row_per_tau():
     curve = sweep(_df(), [0.1, 0.9], [0.1, 0.1], [0.3, 0.5, 0.95], **MODELS)
     assert curve["tau"].tolist() == [0.3, 0.5, 0.95]
+
+
+def test_grid_tries_every_pair_of_cutoffs():
+    grid = sweep_grid(_df(), [0.1, 0.9], [0.1, 0.1], [0.05, 0.5], [0.05, 0.5], **MODELS)
+    assert len(grid) == 4
+    # Strict on small (never trusted), relaxed on mid: everything lands on mid.
+    row = grid[(grid["tau_small"] == 0.05) & (grid["tau_mid"] == 0.5)].iloc[0]
+    assert row["pct_mid"] == 1.0
 
 
 def test_best_under_budget_picks_largest_savings_within_epsilon():

@@ -15,7 +15,7 @@ from benchmarks.baselines.simple import BaseRateBaseline, LengthBaseline
 from benchmarks.data_loaders.routerbench import load_routerbench, make_labels
 from benchmarks.data_loaders.splits import add_split_column
 from benchmarks.metrics import auc, brier, ece, per_group_auc, weighted_mean_auc
-from benchmarks.pareto import best_under_budget, evaluate_routing, route, sweep
+from benchmarks.pareto import best_under_budget, evaluate_routing, route, sweep_grid
 
 TARGETS = ("small_fails", "mid_fails")
 TAUS = np.round(np.arange(0.05, 0.96, 0.05), 2)
@@ -53,6 +53,7 @@ def main():
     if args.embed:
         from core.router.features.dense import embed, load_encoder
         from core.router.features.hybrid import HybridFeatures
+        from core.router.models.lgbm import LGBMRouter
 
         encoder = load_encoder()
         dense = embed(data["prompt"].tolist(), encoder, show_progress=True)  # embed once, reuse
@@ -62,6 +63,8 @@ def main():
         for target in TARGETS:
             model = LogisticRegression(max_iter=2000).fit(x_train, train[target].values)
             record("hybrid_logreg", target, model.predict_proba(x_cal)[:, 1])
+            trees = LGBMRouter().fit(x_train, train[target].values)
+            record("lightgbm", target, trees.predict_proba(x_cal))
 
     # ---- 1. Quality of the probabilities -------------------------------------------------
     rows = [_row(m, t, cal[t].values, p) for m, d in preds.items() for t, p in d.items()]
@@ -69,10 +72,10 @@ def main():
     print(pd.DataFrame(rows).round(4).sort_values(["target", "auc"]).to_string(index=False))
 
     # ---- 2. Real savings (step A) ----------------------------------------------------------
-    print(f"\n== 2. Best savings with quality drop <= {args.epsilon} (vs always-frontier) ==")
+    print(f"\n== 2. Best savings with quality drop <= {args.epsilon} (vs always-frontier), two cutoffs ==")
     summary, curves = [], []
     for name, d in preds.items():
-        curve = sweep(cal, d["small_fails"], d["mid_fails"], TAUS)
+        curve = sweep_grid(cal, d["small_fails"], d["mid_fails"], TAUS, TAUS)
         curves.append(curve.assign(model=name))
         best = best_under_budget(curve, args.epsilon)
         summary.append({"policy": name, **best.drop(["quality"]).to_dict()})
@@ -85,12 +88,14 @@ def main():
     }
     for name, tier in references.items():
         res = evaluate_routing(cal, tier)
-        summary.append({"policy": name, "tau": np.nan, **{k: v for k, v in res.items() if k != "quality"}})
+        summary.append(
+            {"policy": name, "tau_small": np.nan, "tau_mid": np.nan, **{k: v for k, v in res.items() if k != "quality"}}
+        )
     print(pd.DataFrame(summary).round(4).to_string(index=False))
 
     # ---- 3. Within-benchmark skill (step B) --------------------------------------------------
     print("\n== 3. AUC INSIDE each benchmark (0.5 = no skill beyond task type) ==")
-    for name in ("length", "hybrid_logreg"):
+    for name in ("length", "hybrid_logreg", "lightgbm"):
         if name not in preds:
             continue
         for target in TARGETS:

@@ -54,6 +54,18 @@ def sweep(df, p_small, p_mid, taus, **models):
     return pd.DataFrame(out)
 
 
+def sweep_grid(df, p_small, p_mid, taus_small, taus_mid, **models):
+    """Try every (tau_small, tau_mid) pair: two separate dials, one per tier."""
+    out = []
+    for tau_small in taus_small:
+        for tau_mid in taus_mid:
+            tier = route(p_small, p_mid, tau_small, tau_mid)
+            out.append(
+                {"tau_small": float(tau_small), "tau_mid": float(tau_mid), **evaluate_routing(df, tier, **models)}
+            )
+    return pd.DataFrame(out)
+
+
 def best_under_budget(curve, epsilon=0.02):
     """The row with the biggest savings whose quality drop is at most `epsilon`.
 
