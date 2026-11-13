@@ -7,6 +7,7 @@ y = 1 means "this tier failed", p = the router's predicted probability of that.
 """
 
 import numpy as np
+import pandas as pd
 from sklearn.metrics import brier_score_loss, roc_auc_score
 
 
@@ -28,6 +29,28 @@ def auc(y, p):
 def brier(y, p):
     y, p = _check(y, p)
     return float(brier_score_loss(y, p))
+
+
+def per_group_auc(groups, y, p, min_rows=100):
+    """AUC computed inside each group (e.g. each benchmark), so group identity can't help.
+
+    Groups that are too small, or that contain only one outcome, are skipped.
+    """
+    frame = pd.DataFrame({"group": np.asarray(groups), "y": np.asarray(y), "p": np.asarray(p)})
+    rows = []
+    for name, part in frame.groupby("group"):
+        if len(part) < min_rows or part["y"].nunique() < 2:
+            continue
+        rows.append(
+            {"group": name, "n": len(part), "fail_rate": float(part["y"].mean()), "auc": auc(part["y"], part["p"])}
+        )
+    table = pd.DataFrame(rows, columns=["group", "n", "fail_rate", "auc"])
+    return table.sort_values("n", ascending=False).reset_index(drop=True)
+
+
+def weighted_mean_auc(table):
+    """Average of the per-group AUCs, weighted by group size."""
+    return float((table["auc"] * table["n"]).sum() / table["n"].sum())
 
 
 def reliability_table(y, p, n_bins=10):
