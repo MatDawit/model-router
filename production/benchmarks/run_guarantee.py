@@ -13,7 +13,7 @@ import argparse
 import numpy as np
 import pandas as pd
 
-from benchmarks.certify import certify_and_pick
+from benchmarks.certify import certify_and_pick, ladder_report
 from benchmarks.data_loaders.routerbench import load_routerbench, make_labels
 from benchmarks.data_loaders.splits import add_split_column
 from benchmarks.pareto import best_under_budget, evaluate_routing, route, sweep_grid
@@ -31,11 +31,33 @@ def _on_test(test, p_test, tau_small, tau_mid):
     return evaluate_routing(test, tier)
 
 
+def _print_ladder_summary(cal, p_cal, eps, alpha):
+    """Show where the climb stopped and whether it left safe rungs unused."""
+    rows = pd.DataFrame(ladder_report(cal, p_cal["small_fails"], p_cal["mid_fails"], TAUS, TAUS,
+                                      epsilon=eps, alpha=alpha))
+    certified = rows[rows["reached"] & rows["passes_alone"]]
+    blocked = rows[~rows["reached"] & rows["passes_alone"]]  # fine on their own, never tested
+    stop = rows[rows["reached"] & ~rows["passes_alone"]]      # the rung where the climb ended
+    print(f"\n== Ladder diagnostic, epsilon={eps} ({len(rows)} rungs) ==")
+    print(f"certified rungs: {len(certified)}, best savings among them: "
+          f"{certified['savings'].max() if len(certified) else 0.0:.4f}")
+    print(f"blocked rungs that would pass alone: {len(blocked)}, best savings among them: "
+          f"{blocked['savings'].max() if len(blocked) else 0.0:.4f}")
+    cols = ["rung", "tau_small", "tau_mid", "measured_drop", "cushion", "upper_bound",
+            "passes_alone", "reached", "savings"]
+    if len(stop):
+        first = int(stop["rung"].iloc[0])
+        print(f"climb stopped at rung {first}; rungs around the stop:")
+        print(rows.loc[max(first - 3, 0): first + 6, cols].round(4).to_string(index=False))
+
+
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--show-ladder", action="store_true",
+                        help="print where the certification climb stopped and why")
     parser.add_argument("--path", required=True, help="path to routerbench_0shot.pkl")
     parser.add_argument("--epsilons", type=float, nargs="+", default=[0.01, 0.02, 0.03, 0.05])
-    parser.add_argument("--alpha", type=float, default=0.05, help="1 - confidence (0.05 = 95%)")
+    parser.add_argument("--alpha", type=float, default=0.05, help="1 - confidence (0.05 = 95%%)")
     parser.add_argument("--out", default=None, help="optional CSV path for the results table")
     args = parser.parse_args()
 
@@ -90,6 +112,10 @@ def main():
     print("certified with all-zero savings means no cutoff pair could be guaranteed, so use always-frontier.")
     if args.out:
         table.to_csv(args.out, index=False)
+
+    if args.show_ladder:
+        for eps in args.epsilons:
+            _print_ladder_summary(cal, p_cal, eps, args.alpha)
 
 
 if __name__ == "__main__":

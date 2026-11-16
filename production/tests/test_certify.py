@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from benchmarks.certify import build_ladder, certify_and_pick
+from benchmarks.certify import build_ladder, certify_and_pick, ladder_report
 from benchmarks.pareto import routing_losses
 
 MODELS = dict(small="S", mid="M", frontier="F")
@@ -49,6 +49,15 @@ def test_picks_the_cheapest_certified_pair_and_avoids_the_risky_one():
     assert pick["upper_bound"] <= 0.02
     assert pick["quality_drop"] == pytest.approx(0.0)
     assert pick["savings"] > 0.9
+
+
+def test_ladder_report_marks_rungs_after_the_first_failure_as_not_reached():
+    df, p_small, p_mid = _world()
+    rows = ladder_report(df, p_small, p_mid, [0.1, 0.5, 0.99], [0.1, 0.5], **MODELS)
+    assert len(rows) == 6
+    assert rows[0]["reached"] is True
+    first_fail = next(i for i, r in enumerate(rows) if not r["passes_alone"])
+    assert all(not r["reached"] for r in rows[first_fail + 1:])  # nothing past a failure is tested
 
 
 def test_returns_none_when_nothing_can_be_certified():

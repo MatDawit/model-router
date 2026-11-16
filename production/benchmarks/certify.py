@@ -28,15 +28,49 @@ def build_ladder(p_small, p_mid, taus_small, taus_mid):
     return [(tau_small, tau_mid) for _, tau_small, tau_mid in rungs]
 
 
+def _ladder_with_losses(df, p_small, p_mid, taus_small, taus_mid, **models):
+    """The ordered ladder, the tier choices for each rung, and each rung's per-prompt losses."""
+    ladder = build_ladder(p_small, p_mid, taus_small, taus_mid)
+    tiers = [route(p_small, p_mid, ts, tm) for ts, tm in ladder]
+    losses = [routing_losses(df, tier, **models) for tier in tiers]
+    return ladder, tiers, losses
+
+
+def ladder_report(df, p_small, p_mid, taus_small, taus_mid, epsilon=0.02, alpha=0.05, **models):
+    """One row per rung: how it scored, and whether the climb ever got to test it.
+
+    Diagnostic only. It answers: did the climb stop because the safety cushion pushed
+    rungs over the budget, or because one early failure blocked rungs that were fine?
+    """
+    ladder, tiers, losses = _ladder_with_losses(df, p_small, p_mid, taus_small, taus_mid, **models)
+    rows, still_climbing = [], True
+    for i, ((tau_small, tau_mid), tier, loss) in enumerate(zip(ladder, tiers, losses)):
+        upper = empirical_bernstein_upper_bound(loss, alpha=alpha)
+        passes_alone = upper <= epsilon
+        rows.append(
+            {
+                "rung": i,
+                "tau_small": tau_small,
+                "tau_mid": tau_mid,
+                "measured_drop": float(loss.mean()),
+                "cushion": upper - float(loss.mean()),
+                "upper_bound": upper,
+                "passes_alone": passes_alone,
+                "reached": still_climbing,  # the climb only tests a rung if every earlier rung passed
+                "savings": evaluate_routing(df, tier, **models)["savings"],
+            }
+        )
+        still_climbing = still_climbing and passes_alone
+    return rows
+
+
 def certify_and_pick(df, p_small, p_mid, taus_small, taus_mid, epsilon=0.02, alpha=0.05, **models):
     """Return the certified cutoff pair with the biggest savings, or None if none qualifies.
 
     With probability at least 1 - alpha, the TRUE average quality drop of the returned
     pair is at most `epsilon`. `df` is the calibration set.
     """
-    ladder = build_ladder(p_small, p_mid, taus_small, taus_mid)
-    tiers = [route(p_small, p_mid, ts, tm) for ts, tm in ladder]
-    losses = [routing_losses(df, tier, **models) for tier in tiers]
+    ladder, tiers, losses = _ladder_with_losses(df, p_small, p_mid, taus_small, taus_mid, **models)
 
     certified = fixed_sequence_certify(losses, epsilon=epsilon, alpha=alpha)
     if not certified:
