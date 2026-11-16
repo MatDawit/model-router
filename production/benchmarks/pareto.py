@@ -45,6 +45,16 @@ def evaluate_routing(df, tier, small=SMALL, mid=MID, frontier=FRONTIER):
     }
 
 
+def routing_losses(df, tier, small=SMALL, mid=MID, frontier=FRONTIER):
+    """Per-prompt loss: the frontier's score minus the score of the tier we actually used.
+
+    0 = no loss, positive = we lost quality, negative = the cheaper tier did better.
+    """
+    scores = np.stack([df[m].to_numpy() for m in [small, mid, frontier]], axis=1)
+    chosen = scores[np.arange(len(df)), np.asarray(tier)]
+    return scores[:, 2] - chosen
+
+
 def sweep(df, p_small, p_mid, taus, **models):
     """Evaluate the routing rule at each tau (one shared tau for both tiers)."""
     out = []
